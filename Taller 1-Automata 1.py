@@ -1,76 +1,89 @@
-class AFD:
-    def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
-        self.estados = estados
-        self.alfabeto = alfabeto
-        self.transiciones = transiciones
-        self.estado_inicial = estado_inicial
-        self.estados_aceptacion = estados_aceptacion
-    
-    def procesar_cadena(self, cadena):
-        estado_actual = self.estado_inicial
-        
-        for simbolo in cadena:
-            if simbolo not in self.alfabeto:
-                return False
-            
-            transicion = (estado_actual, simbolo)
-            if transicion not in self.transiciones or self.transiciones[transicion] is None:
-                return False
-            
-            estado_actual = self.transiciones[transicion]
-        
-        return estado_actual in self.estados_aceptacion
+from automata.fa.dfa import DFA
+from colorama import Fore, Style, init
+
+init(autoreset=True)
 
 def crear_automata_M1():
-    estados = {'q0', 'q1', 'q2', 'q3', 'q4', 'q5'}
+    
+    # Definición formal del autómata
+    estados = {'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q_reject'}
     alfabeto = {'a', 'b'}
-    
-    transiciones = {
-        ('q0', 'a'): 'q2',
-        ('q0', 'b'): 'q1',
-        ('q1', 'a'): 'q2',
-        ('q1', 'b'): None,
-        ('q2', 'a'): 'q4',
-        ('q2', 'b'): 'q3',
-        ('q3', 'a'): 'q4',
-        ('q3', 'b'): None,
-        ('q4', 'a'): 'q4',
-        ('q4', 'b'): 'q5',
-        ('q5', 'a'): 'q4',
-        ('q5', 'b'): None
-    }
-    
     estado_inicial = 'q0'
     estados_aceptacion = {'q4'}
     
-    return AFD(estados, alfabeto, transiciones, estado_inicial, estados_aceptacion)
+    # Inicializar todas las transiciones con estado de rechazo
+    transiciones = {
+        'q0': {'a': 'q_reject', 'b': 'q_reject'},
+        'q1': {'a': 'q_reject', 'b': 'q_reject'},
+        'q2': {'a': 'q_reject', 'b': 'q_reject'},
+        'q3': {'a': 'q_reject', 'b': 'q_reject'},
+        'q4': {'a': 'q_reject', 'b': 'q_reject'},
+        'q5': {'a': 'q_reject', 'b': 'q_reject'},
+        'q_reject': {'a': 'q_reject', 'b': 'q_reject'}
+    }
+    
+    # Definir las transiciones válidas
+    transiciones['q0']['a'] = 'q2'
+    transiciones['q0']['b'] = 'q1'
+    
+    transiciones['q1']['a'] = 'q2'
+    transiciones['q1']['b'] = 'q_reject'  # "bb" no permitido
+    
+    transiciones['q2']['a'] = 'q4'
+    transiciones['q2']['b'] = 'q3'
+    
+    transiciones['q3']['a'] = 'q4'
+    transiciones['q3']['b'] = 'q_reject'  # "bb" no permitido
+    
+    transiciones['q4']['a'] = 'q4'
+    transiciones['q4']['b'] = 'q5'
+    
+    transiciones['q5']['a'] = 'q4'
+    transiciones['q5']['b'] = 'q_reject'  # "bb" no permitido
+    
+    # Crear el DFA automata-lib
+    automata = DFA(
+        states=estados,
+        input_symbols=alfabeto,
+        transitions=transiciones,
+        initial_state=estado_inicial,
+        final_states=estados_aceptacion
+    )
+    
+    return automata
+
+def validar_cadena_M1(automata, cadena):
+    try:
+        return automata.accepts_input(cadena)
+    except:
+        return False
 
 def main():
     automata = crear_automata_M1()
     
-    print("=== AUTÓMATA M1 - LENGUAJE L1 ===")
-    print("Reconoce: {w ∈ {a,b}* | #a(w) ≥ 2 ∧ bb ∉ w ∧ w termina en a}")
     print()
+    print(f"{Fore.CYAN}=== AUTÓMATA M1 - LENGUAJE L1 ===")
+    print(f"Reconoce: {{w ∈ {{a,b}}* | #a(w) ≥ 2 ∧ bb ∉ w ∧ w termina en a}}")
+    print()
+
     
     while True:
-        cadena = input("Ingrese una cadena (o 'salir' para terminar): ").strip().lower()
+        cadena = input("\nIngrese una cadena (o 'salir' para terminar): ").strip().lower()
         
         if cadena == 'salir':
-            print("¡Hasta luego!")
+            print(f"{Fore.BLUE}¡Hasta luego!{Style.RESET_ALL}")
             break
         
         if not all(c in {'a', 'b'} for c in cadena):
-            print("Error: La cadena solo puede contener los símbolos 'a' y 'b'")
+            print(f"{Fore.RED}Error: La cadena solo puede contener los símbolos 'a' y 'b'{Style.RESET_ALL}")
             continue
         
-        resultado = automata.procesar_cadena(cadena)
+        resultado = validar_cadena_M1(automata, cadena)
         
         if resultado:
-            print(f"✓ La cadena '{cadena}' ES ACEPTADA por el autómata M1")
+            print(f"{Fore.GREEN}✓ La cadena '{cadena}' ES ACEPTADA por el autómata M1{Style.RESET_ALL}")
         else:
-            print(f"✗ La cadena '{cadena}' NO ES ACEPTADA por el autómata M1")
-        
-        print()
+            print(f"{Fore.RED}✗ La cadena '{cadena}' NO ES ACEPTADA por el autómata M1{Style.RESET_ALL}")
 
 if __name__ == "__main__":
     main()

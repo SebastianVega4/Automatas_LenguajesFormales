@@ -1,3 +1,8 @@
+from colorama import Fore, Style, init
+import string
+
+init(autoreset=True)
+
 class AFN:
     def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
         self.estados = estados
@@ -7,7 +12,6 @@ class AFN:
         self.estados_aceptacion = estados_aceptacion
     
     def procesar_cadena(self, cadena):
-        """Procesa una cadena usando el AFN (análisis por hilos)"""
         estados_actuales = {self.estado_inicial}
         
         for simbolo in cadena:
@@ -24,7 +28,6 @@ class AFN:
             if not estados_actuales:
                 return False
         
-        # Verificar si al menos un estado final es de aceptación
         return any(estado in self.estados_aceptacion for estado in estados_actuales)
 
 def crear_automata_contrasenas():
@@ -37,10 +40,9 @@ def crear_automata_contrasenas():
     digitos = set("0123456789")
     alfabeto = mayusculas.union(minusculas).union(digitos)
     
-    # Transiciones (AFN - puede tener múltiples destinos)
     transiciones = {}
     
-    # q0: estado inicial - transición con mayúsculas a q1 y q4
+    # q0: estado inicial - mayúsculas a q1 y q4
     for letra in mayusculas:
         transiciones[('q0', letra)] = {'q1', 'q4'}
     
@@ -66,32 +68,54 @@ def crear_automata_contrasenas():
 def main():
     automata = crear_automata_contrasenas()
     
-    print("=== AFN - VALIDACIÓN DE CONTRASEÑAS TEMPORALES ===")
-    print("Formato: Letra mayúscula + [letras minúsculas opcionales] + dígitos obligatorios")
-    print("Ejemplos válidos: 'A123', 'Password123', 'X99'")
-    print("Ejemplos inválidos: 'soga2025', 'A1', '1234'")
+    print()
+    print()
+    print(f"{Fore.CYAN}==================== AFN - VALIDACIÓN DE CONTRASEÑAS TEMPORALES ====================")
+    print(f"Formato: Letra mayúscula + [letras minúsculas opcionales] + dígitos obligatorios")
+    print(f"Ejemplos válidos: 'A123', 'Password123', 'X99'")
+    print(f"Ejemplos inválidos: 'soga2025', 'A1', '1234'{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}====================================================================================")
     print()
     
+    # Casos de prueba
+    casos_validos = ['A123', 'Password123', 'X99', 'B456', 'Helloworld2023']
+    casos_invalidos = ['soga2025', 'A198k', '1234', 'abc123', 'TEST', 'A', '123']
+    
+    print(f"{Fore.YELLOW}=== CASOS DE PRUEBA VÁLIDOS ===")
+    for cadena in casos_validos:
+        resultado = automata.procesar_cadena(cadena)
+        color = Fore.GREEN if resultado else Fore.RED
+        simbolo = "✓" if resultado else "✗"
+        print(f"{color}{simbolo} '{cadena}' -> {'VÁLIDA' if resultado else 'INVÁLIDA'}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}=== CASOS DE PRUEBA INVÁLIDOS ===")
+    for cadena in casos_invalidos:
+        resultado = automata.procesar_cadena(cadena)
+        color = Fore.RED if not resultado else Fore.GREEN
+        simbolo = "✓" if resultado else "✗"
+        print(f"{color}{simbolo} '{cadena}' -> {'VÁLIDA' if resultado else 'INVÁLIDA'}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.CYAN}=== VALIDACIÓN DE ENTRADAS ===")
+    
     while True:
-        cadena = input("Ingrese una contraseña (o 'salir' para terminar): ").strip()
+        cadena = input("\nIngrese una contraseña (o 'salir' para terminar): ").strip()
         
         if cadena.lower() == 'salir':
-            print("¡Hasta luego!")
+            print(f"{Fore.BLUE}¡Hasta luego!{Style.RESET_ALL}")
             break
         
-        # Verificar que todos los caracteres sean válidos
         caracteres_validos = all(c in automata.alfabeto for c in cadena)
         if not caracteres_validos:
-            print("Error: La cadena contiene caracteres no permitidos")
-            print("Solo se permiten: A-Z, a-z, 0-9")
+            print(f"{Fore.RED}Error: La cadena contiene caracteres no permitidos{Style.RESET_ALL}")
+            print(f"{Fore.RED}Solo se permiten: A-Z, a-z, 0-9{Style.RESET_ALL}")
             continue
         
         resultado = automata.procesar_cadena(cadena)
         
         if resultado:
-            print(f"✓ La contraseña '{cadena}' ES VÁLIDA")
+            print(f"{Fore.GREEN}✓ La contraseña '{cadena}' ES VÁLIDA{Style.RESET_ALL}")
         else:
-            print(f"✗ La contraseña '{cadena}' NO ES VÁLIDA")
+            print(f"{Fore.RED}✗ La contraseña '{cadena}' NO ES VÁLIDA{Style.RESET_ALL}")
         
         print()
 

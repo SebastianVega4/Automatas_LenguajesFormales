@@ -1,3 +1,8 @@
+from colorama import Fore, Style, init
+import string
+
+init(autoreset=True)
+
 class AFD:
     def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
         self.estados = estados
@@ -22,7 +27,6 @@ class AFD:
         return estado_actual in self.estados_aceptacion
 
 def crear_automata_correos():
-    # Estados
     estados = {'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13'}
     
     # Alfabeto
@@ -31,10 +35,9 @@ def crear_automata_correos():
     caracteres_especiales = {'@', '.'}
     alfabeto = letras.union(digitos).union(caracteres_especiales)
     
-    # Transiciones (AFD - una única transición por estado y símbolo)
     transiciones = {}
     
-    # q0: solo acepta letras minúsculas -> q1
+    # q0: solo acepta letras minúsculas
     for letra in letras:
         transiciones[('q0', letra)] = 'q1'
     
@@ -83,36 +86,80 @@ def crear_automata_correos():
     
     return AFD(estados, alfabeto, transiciones, estado_inicial, estados_aceptacion)
 
+def validar_formato_basico(correo):
+    if '@' not in correo:
+        return False, "El correo debe contener '@'"
+    
+    if not correo.split('@')[0]:  # Parte antes del @
+        return False, "El correo debe tener texto antes del '@'"
+    
+    if not correo.endswith('@uptc.edu.co'):
+        return False, "El correo debe terminar con '@uptc.edu.co'"
+    
+    # Verificar que el inicio sea con letra minúscula
+    if not correo[0].islower() or not correo[0].isalpha():
+        return False, "El correo debe comenzar con una letra minúscula"
+    
+    return True, "Formato válido"
+
 def main():
     automata = crear_automata_correos()
     
-    print("=== AFD - VALIDACIÓN DE CORREOS INSTITUCIONALES ===")
-    print("Formato: [letras/dígitos] + @uptc.edu.co")
-    print("Debe comenzar con letra minúscula")
-    print("Ejemplos válidos: 'juan3@uptc.edu.co', 'maria@uptc.edu.co'")
-    print("Ejemplos inválidos: '123juan@uptc.edu.co', 'MARIA@uptc.edu.co'")
+    print()    
+    print()
+    print(f"{Fore.CYAN}==================== AFD - VALIDACIÓN DE CORREOS INSTITUCIONALES ====================")
+    print(f"Formato: [letras/dígitos] + @uptc.edu.co")
+    print(f"Debe comenzar con letra minúscula")
+    print(f"Ejemplos válidos: 'juan3@uptc.edu.co', 'maria@uptc.edu.co'")
+    print(f"Ejemplos inválidos: '123juan@uptc.edu.co', 'MARIA@uptc.edu.co'{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}====================================================================================")
     print()
     
+    # Casos de prueba
+    casos_validos = ['juan3@uptc.edu.co', 'maria@uptc.edu.co', 'abc123@uptc.edu.co', 'a@uptc.edu.co']
+    casos_invalidos = ['123juan@uptc.edu.co', 'MARIA@uptc.edu.co', 'juan@uptc.com', 
+                      '@uptc.edu.co', 'juan@uptc.edu.com', 'JUAN@uptc.edu.co']
+    
+    print(f"{Fore.YELLOW}=== CASOS DE PRUEBA VÁLIDOS ===")
+    for correo in casos_validos:
+        resultado = automata.procesar_cadena(correo)
+        color = Fore.GREEN if resultado else Fore.RED
+        simbolo = "✓" if resultado else "✗"
+        print(f"{color}{simbolo} '{correo}' -> {'VÁLIDO' if resultado else 'INVÁLIDO'}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}=== CASOS DE PRUEBA INVÁLIDOS ===")
+    for correo in casos_invalidos:
+        resultado = automata.procesar_cadena(correo)
+        color = Fore.RED if not resultado else Fore.GREEN
+        simbolo = "✓" if resultado else "✗"
+        print(f"{color}{simbolo} '{correo}' -> {'VÁLIDO' if resultado else 'INVÁLIDO'}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.CYAN}=== VALIDACIÓN DE ENTRADAS ===")
+    
     while True:
-        correo = input("Ingrese un correo electrónico (o 'salir' para terminar): ").strip().lower()
+        correo = input("\nIngrese un correo electrónico (o 'salir' para terminar): ").strip().lower()
         
         if correo.lower() == 'salir':
-            print("¡Hasta luego!")
+            print(f"{Fore.BLUE}¡Hasta luego!{Style.RESET_ALL}")
             break
         
-        # Verificar que todos los caracteres sean válidos
+        formato_valido, mensaje = validar_formato_basico(correo)
+        if not formato_valido:
+            print(f"{Fore.RED}✗ {mensaje}{Style.RESET_ALL}")
+            continue
+        
         caracteres_validos = all(c in automata.alfabeto for c in correo)
         if not caracteres_validos:
-            print("Error: El correo contiene caracteres no permitidos")
-            print("Solo se permiten: a-z, 0-9, @, .")
+            print(f"{Fore.RED}Error: El correo contiene caracteres no permitidos{Style.RESET_ALL}")
+            print(f"{Fore.RED}Solo se permiten: a-z, 0-9, @, .{Style.RESET_ALL}")
             continue
         
         resultado = automata.procesar_cadena(correo)
         
         if resultado:
-            print(f"✓ El correo '{correo}' ES VÁLIDO")
+            print(f"{Fore.GREEN}✓ El correo '{correo}' ES VÁLIDO{Style.RESET_ALL}")
         else:
-            print(f"✗ El correo '{correo}' NO ES VÁLIDO")
+            print(f"{Fore.RED}✗ El correo '{correo}' NO ES VÁLIDO{Style.RESET_ALL}")
         
         print()
 
